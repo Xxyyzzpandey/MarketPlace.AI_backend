@@ -8,7 +8,6 @@ router.post("/add", async (req, res) => {
   try {
     const { businessName, description, whatsappNumber } = req.body;
 
-    // Use the shared utility
     const vectorArray = await generateVector(description);
 
     const newWholesaler = await Wholesaler.create({

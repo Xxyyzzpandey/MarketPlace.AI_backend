@@ -8,12 +8,12 @@ export const sendWhatsAppMessage = async (to, templateName, components = []) => 
       WHATSAPP_URL,
       {
         messaging_product: "whatsapp",
-        to: to, // Format: "919876543210"
+        to: to, 
         type: "template",
         template: {
           name: templateName,
           language: { code: "en_US" },
-          components: components, // For dynamic variables like product names
+          components: components, 
         },
       },
       {

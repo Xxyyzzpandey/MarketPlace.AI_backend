@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const SourcingRequestSchema = new mongoose.Schema({
   buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  originalPrompt: { type: String, required: true }, // The raw text written by user
+  originalPrompt: { type: String, required: true }, 
     structuredData: {
     item: String,
     category: String,

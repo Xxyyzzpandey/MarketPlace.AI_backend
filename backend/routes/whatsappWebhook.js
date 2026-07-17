@@ -1,62 +1,72 @@
 import { Router } from "express";
+import axios from "axios";
 import Lead from "../models/leadSchema.js";
 import Wholesaler from "../models/sellerModel.js";
+import { sendWhatsApp } from "./searchProduct.js";
 
 const router = Router();
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 
-// This is the URL you would give to Twilio/Meta: 
-// e.g., https://your-domain.com/api/webhook/whatsapp
-router.post("/whatsapp", async (req, res) => {
+router.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook verified");
+    return res.status(200).send(challenge);
+  }
+  res.sendStatus(403);
+});
+
+router.post("/webhook", async (req, res) => {
   try {
-    // 1. Get data from the WhatsApp Provider
-    // Twilio uses 'From' and 'Body'. Meta/Official API uses different keys.
-    const { From, Body } = req.body; 
-    const senderNumber = From.replace("whatsapp:", ""); // Clean the number
-    const messageText = Body.trim().toUpperCase();
+    const entry = req.body.entry?.[0];
+    const value = entry?.changes?.[0]?.value;
+    const message = value?.messages?.[0];
+
+    res.sendStatus(200);
+
+    if (!message || message.type !== "text") return;
+
+    const senderNumber = message.from; 
+    const messageText = message.text.body.trim().toUpperCase();
 
     console.log(`Received message: "${messageText}" from ${senderNumber}`);
 
-    // 2. Check if the message starts with 'YES'
     if (messageText.startsWith("YES")) {
-      // Extract the 4-digit code (e.g., "YES A7D2" -> "A7D2")
       const parts = messageText.split(" ");
       const code = parts[1];
 
       if (!code) {
-        return res.status(200).send("Please provide the code, e.g., YES A1B2");
+        return sendWhatsApp(senderNumber, "Please provide the code, e.g., YES A1B2");
       }
 
-      // 3. Find the Lead with this code
       const lead = await Lead.findOne({ shortCode: code }).populate("wholesalerId");
 
       if (!lead) {
-        return res.status(200).send("Invalid code or lead expired.");
+        return sendWhatsApp(senderNumber, "Invalid code or lead expired.");
+      }
+      const normalize = (n) => n.replace(/[^\d]/g, "");
+      if (normalize(lead.wholesalerId.whatsappNumber) !== normalize(senderNumber)) {
+        return sendWhatsApp(senderNumber, "Unauthorized. This lead belongs to another seller.");
       }
 
-      // 4. Verify the sender is actually the seller assigned to this lead
-      if (lead.wholesalerId.whatsappNumber !== senderNumber) {
-        return res.status(200).send("Unauthorized. This lead belongs to another seller.");
-      }
-
-      // 5. Success! Update Lead status and send Buyer Details
       lead.status = "accepted";
       lead.acceptedAt = new Date();
       await lead.save();
 
-      const successMessage = `Lead Accepted! ✅\n\nBuyer: ${lead.buyerInfo.name}\nPhone: ${lead.buyerInfo.phone}\nWhatsApp: https://wa.me/${lead.buyerInfo.phone.replace("+", "")}`;
-      
-      // In a real app, you'd call your sendWhatsApp(senderNumber, successMessage) here
-      console.log("Sending Buyer details to seller...");
+      const successMessage = `Lead Accepted!\n\nBuyer: ${lead.buyerInfo.name}\nPhone: ${lead.buyerInfo.phone}\nWhatsApp: https://wa.me/${lead.buyerInfo.phone.replace("+", "")}`;
 
-      return res.status(200).send(successMessage);
+      await sendWhatsApp(senderNumber, successMessage);
+      return;
     }
 
-    // Default response for other messages
-    res.status(200).send("Reply YES [CODE] to accept a lead.");
-
+    await sendWhatsApp(senderNumber, "Reply YES [CODE] to accept a lead.");
   } catch (error) {
     console.error("Webhook Error:", error);
-    res.status(500).send();
   }
 });
 

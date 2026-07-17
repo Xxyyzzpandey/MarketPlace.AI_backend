@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   whatsappNumber: { type: String, required: true, unique: true }, 
   password: { type: String, required: true },
-  role: { type: String, default: 'buyer' }, // Default to normal user
+  role: { type: String, default: 'buyer' }, 
   createdAt: { type: Date, default: Date.now }
 });
 

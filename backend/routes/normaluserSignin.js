@@ -11,9 +11,6 @@ router.post("/signin", async (req, res) => {
     console.log(req.body)
     const { whatsappNumber, password } = req.body;
 
-    // ----------------------------
-    // 1️⃣ Basic Validation
-    // ----------------------------
     if (!whatsappNumber || !password) {
       return res.status(400).json({
         success: false,
@@ -28,9 +25,6 @@ router.post("/signin", async (req, res) => {
       });
     }
 
-    // ----------------------------
-    // 2️⃣ Find User
-    // ----------------------------
     const user = await User.findOne({ whatsappNumber });
 
     if (!user) {
@@ -40,9 +34,6 @@ router.post("/signin", async (req, res) => {
       });
     }
 
-    // ----------------------------
-    // 3️⃣ Compare Password
-    // ----------------------------
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -51,19 +42,11 @@ router.post("/signin", async (req, res) => {
         message: "Invalid credentials",
       });
     }
-
-    // ----------------------------
-    // 4️⃣ Generate Token
-    // ----------------------------
     const token = jwt.sign(
       { id: user._id, role: "buyer" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-
-    // ----------------------------
-    // 5️⃣ Send Response
-    // ----------------------------
     res.status(200).json({
       success: true,
       token,

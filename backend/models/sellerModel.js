@@ -7,7 +7,7 @@ const WholesalerSchema = new mongoose.Schema({
     type: String, 
     required: true, 
     unique: true, 
-    trim: true    //remove whitespace
+    trim: true   
   },
   password: { 
     type: String, 
@@ -15,7 +15,6 @@ const WholesalerSchema = new mongoose.Schema({
   },
   description: { type: String, required: true },
 
-  // VECTOR EMBEDDING (Used by MongoDB Vector Search)
   embedding: { 
     type: [Number], 
     required: true
@@ -37,7 +36,6 @@ const WholesalerSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Create a compound index if you plan on searching by location + embedding often
 WholesalerSchema.index({ "location.country": 1, status: 1 });
 
 export default mongoose.model("wholesaler", WholesalerSchema);

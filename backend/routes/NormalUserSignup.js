@@ -8,10 +8,6 @@ const router = express.Router();
 router.post("/signup", async (req, res) => {
   try {
     const { firstName, lastName, whatsappNumber, password } = req.body;
-
-    // ----------------------------
-    // 1️⃣ Basic Validation
-    // ----------------------------
     if (!whatsappNumber || !password) {
       return res.status(400).json({
         success: false,
@@ -32,10 +28,6 @@ router.post("/signup", async (req, res) => {
         message: "JWT secret not configured",
       });
     }
-
-    // ----------------------------
-    // 2️⃣ Check Existing User
-    // ----------------------------
     const existingUser = await User.findOne({ whatsappNumber });
 
     if (existingUser) {
@@ -45,14 +37,8 @@ router.post("/signup", async (req, res) => {
       });
     }
 
-    // ----------------------------
-    // 3️⃣ Hash Password
-    // ----------------------------
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ----------------------------
-    // 4️⃣ Save User
-    // ----------------------------
     const newUser = await User.create({
       firstName,
       lastName,
@@ -60,18 +46,12 @@ router.post("/signup", async (req, res) => {
       password: hashedPassword,
     });
 
-    // ----------------------------
-    // 5️⃣ Generate JWT
-    // ----------------------------
     const token = jwt.sign(
       { id: newUser._id },
       process.env.JWT_SECRET,
       { expiresIn: "30d" }
     );
 
-    // ----------------------------
-    // 6️⃣ Send Response
-    // ----------------------------
     res.status(201).json({
       success: true,
       token,

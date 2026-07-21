@@ -4,9 +4,9 @@ let extractor = null;
 
 export const getEmbedder = async () => {
   if (!extractor) {
-    console.log("🚀 Loading AI Embedding Model into RAM...");
+    console.log("Loading AI Embedding Model into RAM...");
     extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    console.log("✅ Model Loaded successfully.");
+    console.log(" Model Loaded successfully.");
   }
   return extractor;
 };

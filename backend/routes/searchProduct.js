@@ -17,8 +17,8 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const generateShortCode = () => crypto.randomBytes(2).toString('hex').toUpperCase();
 
-PHONE_NUMBER_ID=process.env.WHATSAPP_PHONE_NUMBER_ID;
-ACCESS_TOKEN=process.env.WHATSAPP_ACCESS_TOKEN;
+const PHONE_NUMBER_ID=process.env.WHATSAPP_PHONE_NUMBER_ID;
+const ACCESS_TOKEN=process.env.WHATSAPP_ACCESS_TOKEN;
 
 export async function sendWhatsApp (to, text) {
     const url = `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
